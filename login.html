@@ -112,7 +112,10 @@ button:hover {
       axios.post('http://localhost:3000/user/login', formData)
         .then(response => {
           console.log('Login successful:', response.data);
-          alert('Login successful');
+          // alert('Login successful');
+
+          // Redirect to expense.html upon successful login
+        window.location.href = 'expense.html';
         })
         .catch(error => {
           console.error('Login failed:', error.response.data);

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+
+    <style>
+     body {
+    font-family: 'Arial';
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: #333;
+    margin: 0;
+  }
+  
+  .container {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .expense-form {
+    position: relative;
+    z-index: 1;
+    background-color: rgba(255, 165, 0, 0.9); /* Light orange background */
+    padding: 20px; /* Adjust padding for better visibility */
+  }
+   
+  
+  /* Add a box shadow to the container for a subtle depth effect */
+  .container {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Your existing styles... */
+  
+body, h1, h2, h3, p, ul, li {
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .header {
+    background-color: #2eea41;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .expense-form {
+    background-color: #72f490;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .expense-list {
+    margin-top: 20px;
+  }
+  
+  .expense-item {
+    background-color: #fff;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Style form inputs */
+  input[type="text"],
+  input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+   
+  }
+  
+  /* Style buttons */
+  .button {
+    background-color: #007bff;
+    color: #ffffff;
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  
+  button:hover {
+    background-color: #3367d6;
+  }
+  
+  /* Responsive layout */
+  @media (max-width: 600px) {
+    .container {
+      padding: 10px;
+    }
+  }
+  
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="addForm" class="expense-form">
+          <label for="ExpenceAmount">Choose Expense Amount:</label>
+          <input type="number" id="ExpenceAmount" class="form-control-sm" required />
+          
+          <label for="Description">Choose Description:</label>
+          <input type="text" id="Description" class="form-control-sm m-2" required/>
+          
+          <label for="Catagory" class="form-label">Choose a Category:</label>
+          <select class="form-select-sm" id="Catagory">
+            <option>Select Category</option>
+            <option>Food</option>
+            <option>Electricity</option>
+            <option>Rent</option>
+            <option>Fuel</option>
+          </select>
+          
+          <input type="submit" class="button" value="Add Expense">
+        </form>
+      
+        <ul id="items" class="expense-list">
+       
+        </ul>
+      </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.6/axios.min.js"></script>
+
+<script>
+    var editingItem = null;
+    document.addEventListener('submit', addExpense);
+
+    async function fetchExpenses() {
+        document.getElementById('items').innerHTML='';
+        try {
+            const response = await axios.get("http://localhost:3000/user/expense");
+            for (let i = 0; i < response.data.length; i++) {
+                showExpenseOnScreen(response.data[i]);
+            }
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+   
+    fetchExpenses();
+
+    function addExpense(event) {
+        event.preventDefault();
+        const ExpenceAmount = event.target.ExpenceAmount.value;
+        const Description = event.target.Description.value;
+        const Catagory = event.target.Catagory.value;
+        const obj = {
+            ExpenceAmount,
+            Description,
+            Catagory
+        };
+
+        if (editingItem === null) {
+            axios.post("http://localhost:3000/user/expense", obj)
+                .then((res) => {
+                    // showExpenseOnScreen(res.data.newExpense);
+                    fetchExpenses();
+                    console.log(res);
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        } else {
+            axios.put(`http://localhost:3000/user/expense/${editingItem}`, obj)
+                .then((response) => {
+                    console.log(response.data);
+                    // showExpenseOnScreen(response.data.updatedExpense[1][0]);
+                    fetchExpenses();
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+            editingItem = null;
+        }
+
+        
+        event.target.reset();
+    }
+
+    function showExpenseOnScreen(obj) {
+        const parentElem = document.getElementById('items');
+        const childElem = document.createElement('li');
+        childElem.id = `${obj.id}`;
+        childElem.textContent = obj.ExpenceAmount + '-' + obj.Description + '-' + obj.Catagory;
+
+        let deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger btn-sm float-right m-1';
+        deleteBtn.appendChild(document.createTextNode('Delete'));
+        deleteBtn.onclick = () => {
+            axios.delete(`http://localhost:3000/user/expense/${obj.id}`)
+                .then((response) => {
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+            parentElem.removeChild(childElem);
+        };
+
+        let editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-success btn-sm float-right mr-1';
+        editBtn.appendChild(document.createTextNode('Edit'));
+        editBtn.onclick = function () {
+            if (editingItem === null) {
+               
+                editingItem = obj.id;
+
+                
+                document.getElementById('ExpenceAmount').value = obj.ExpenceAmount;
+                document.getElementById('Description').value = obj.Description;
+                document.getElementById('Catagory').value = obj.Catagory;
+            }
+        };
+
+        childElem.appendChild(editBtn);
+        childElem.appendChild(deleteBtn);
+        parentElem.appendChild(childElem);
+    }
+</script>
+
+</body>
+</html>

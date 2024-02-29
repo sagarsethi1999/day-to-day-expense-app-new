@@ -3,6 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const User = require("./models/user");
+const Expense = require('./models/expense');
 
 const app = express();
 
@@ -22,6 +23,9 @@ sequelize.sync()
 // Routes
 const userRoutes = require("./routes/userRoutes");
 app.use("/user", userRoutes);
+
+const expenseRoutes = require("./routes/expenseRoutes");
+app.use("/user/expense", expenseRoutes);
 
 // Start server
 const PORT = process.env.PORT || 3000;
