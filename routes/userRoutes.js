@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
+const bcrypt = require('bcrypt');
 
 // Route to handle user sign-up
 router.post('/signup', async (req, res) => {
@@ -15,8 +16,11 @@ router.post('/signup', async (req, res) => {
             return res.status(409).send('Email address is already in use');
         }
 
+        const saltRounds = 10; // Number of salt rounds
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
         // Create new user
-        const newUser = await User.create({ name, email, password });
+        const newUser = await User.create({ name, email, password: hashedPassword });
         console.log('User signed up:', newUser);
 
         // Send success response
@@ -40,8 +44,9 @@ router.post('/login', async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        const passwordMatch = await bcrypt.compare(password, user.password);
         // Check if password matches
-        if (user.password !== password) {
+        if (!passwordMatch) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
