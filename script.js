@@ -15,16 +15,12 @@ document.getElementById('signup-form').addEventListener('submit', function(event
 
     axios.post('http://localhost:3000/user/signup', userData)
         .then(response => {
-            if (response.status === 200) {
-                alert('Sign up successful!');
-                
-            } else {
-                alert('Sign up failed!');
-            }
+          console.log( response.status === 200);
+             
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred, please try again later.');
+            
         });
 });
 
