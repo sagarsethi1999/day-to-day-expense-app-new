@@ -1,26 +1,26 @@
 // models/expense.js
-const { DataTypes } = require('sequelize');
+const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
 
 const Expense = sequelize.define('expense', {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        allowNull: false,
-        primaryKey: true
-    },
-    ExpenceAmount: {
-        type: DataTypes.FLOAT,
+    ExpenseAmount: {
+        type: Sequelize.INTEGER,
         allowNull: false
     },
     Description: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false
     },
-    Catagory: {
-        type: DataTypes.STRING,
+    Category: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    userID: {
+        type: Sequelize.INTEGER,
         allowNull: false
     }
 });
 
+
 module.exports = Expense;
+

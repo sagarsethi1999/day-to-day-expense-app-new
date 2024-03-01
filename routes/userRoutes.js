@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // Route to handle user sign-up
 router.post('/signup', async (req, res) => {
@@ -34,27 +35,26 @@ router.post('/signup', async (req, res) => {
 
 
 
+// Route to handle user login
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Check if user exists
+        // Find user by email
         const user = await User.findOne({ where: { email: email } });
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        if (!user) return res.status(404).send('User not found');
 
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        // Check if password matches
-        if (!passwordMatch) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
-
-        // Password matches, login successful
-        return res.status(200).json({ message: 'User login successful' });
+        // Verify password
+        const validPassword = await user.validPassword(password);
+        if (!validPassword) return res.status(401).send('Incorrect password');
+        
+        // Generate JWT token with user ID in payload
+        const token = jwt.sign({ id: user.id, name: user.name }, 'secretkey');
+        // res.header('authorization', token).status(200).send('Login successful');
+        res.status(200).json({ token: token, message: 'Login successful' });
     } catch (error) {
         console.error('Error:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        res.status(500).send('Internal server error');
     }
 });
 

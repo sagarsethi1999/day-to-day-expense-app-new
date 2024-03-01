@@ -14,11 +14,18 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Sync database
 const sequelize = require("./util/database");
-sequelize.sync()
+sequelize
+.sync()
+// .sync({force: true})
   .then(() => {
     console.log('Database & tables created!');
   })
   .catch(err => console.error('Unable to sync database:', err));
+
+// Define association
+User.hasMany(Expense, { foreignKey: 'userID' });
+Expense.belongsTo(User, { foreignKey: 'userID' });
+
 
 // Routes
 const userRoutes = require("./routes/userRoutes");

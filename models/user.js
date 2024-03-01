@@ -1,13 +1,20 @@
 // models/user.js
 const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
+const bcrypt = require('bcrypt');
 
 const User = sequelize.define('user', {
     // Define your user model fields here
+    id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        allowNull: false,
+        primaryKey: true
+    },
     email: {
         type: Sequelize.STRING,
         allowNull: false,
-        primaryKey: true // Using email as primary key
+        
     },
     name: {
         type: Sequelize.STRING,
@@ -18,6 +25,11 @@ const User = sequelize.define('user', {
         allowNull: false
     }
 });
+
+User.prototype.validPassword = async function(password) {
+    return await bcrypt.compare(password, this.password);
+};
+
 
 module.exports = User;
 
