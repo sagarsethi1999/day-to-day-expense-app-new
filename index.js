@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const User = require("./models/user");
 const Expense = require('./models/expense');
+const Order = require('./models/orders');
 
 const app = express();
 
@@ -26,6 +27,8 @@ sequelize
 User.hasMany(Expense, { foreignKey: 'userID' });
 Expense.belongsTo(User, { foreignKey: 'userID' });
 
+User.hasMany(Order);
+Order.belongsTo(User);
 
 // Routes
 const userRoutes = require("./routes/userRoutes");
@@ -33,6 +36,12 @@ app.use("/user", userRoutes);
 
 const expenseRoutes = require("./routes/expenseRoutes");
 app.use("/user/expense", expenseRoutes);
+
+const purchase = require("./routes/purchase");
+app.use("/purchase/premiummembership", purchase);
+
+const premium = require("./routes/premium");
+app.use("/user/premium-status", premium);
 
 // Start server
 const PORT = process.env.PORT || 3000;

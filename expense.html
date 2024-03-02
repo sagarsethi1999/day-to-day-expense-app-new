@@ -125,6 +125,23 @@
       .container {
         padding: 10px;
       }
+
+    }
+
+
+    #buyPremiumBtn {
+      /* Your button styles */
+      background-color: #f3a618;
+      color: #ffffff;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    #buyPremiumBtn:hover {
+      background-color: #ff3131;
     }
   </style>
 </head>
@@ -133,7 +150,7 @@
   <div class="container">
     <form id="addForm" class="expense-form">
       <label for="ExpenseAmount">Choose Expense Amount:</label>
-<input type="number" id="ExpenseAmount" class="form-control-sm" required />
+      <input type="number" id="ExpenseAmount" class="form-control-sm" required />
 
 
       <label for="Description">Choose Description:</label>
@@ -155,9 +172,42 @@
 
     </ul>
   </div>
+
+  <button id="buyPremiumBtn" class="btn btn-primary btn-lg" style="position: fixed; bottom: 20px; right: 20px;">
+    Buy Premium Membership
+  </button>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.6/axios.min.js"></script>
 
   <script>
+
+
+
+    window.onload = checkPremiumStatus;
+
+
+    async function checkPremiumStatus() {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.get('http://localhost:3000/user/premium-status', {
+          headers: { 'Authorization': token }
+        });
+
+        const isPremium = response.data.isPremium;
+        console.log(response);
+        if (isPremium) {
+          document.getElementById('buyPremiumBtn').style.display = 'none';
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+
+
+
+
     var editingItem = null;
     document.addEventListener('submit', addExpense);
 
@@ -282,6 +332,37 @@
       childElem.appendChild(deleteBtn);
       parentElem.appendChild(childElem);
     }
+
+    document.getElementById('buyPremiumBtn').onclick = async function (e) {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:3000/purchase/premiummembership', { headers: { 'Authorization': token } });
+      console.log(response);
+      var option = {
+        "key": response.data.key_id,
+        "order_id": response.data.order.id,
+        "handler": async function (response) {
+          await axios.post('http://localhost:3000/purchase/premiummembership', {
+            order_id: option.order_id,
+            payment_id: response.razorpay_payment_id,
+            status: response.razorpay_status // Include the payment status received from Razorpay
+          }, { headers: { "Authorization": token } });
+          checkPremiumStatus();
+          alert('you are a premium user now!!!')
+        }
+      };
+
+      const rzp1 = new Razorpay(option); // Change options to option
+      rzp1.open();
+      e.preventDefault();
+
+      rzp1.on("payment.failed", function (response) {
+        console.log(response);
+        alert('something went wrong')
+      });
+    };
+
+
+
   </script>
 
 </body>

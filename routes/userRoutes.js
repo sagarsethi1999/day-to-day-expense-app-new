@@ -4,6 +4,7 @@ const router = express.Router();
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const verifyToken = require('../middleware/auth');
 
 // Route to handle user sign-up
 router.post('/signup', async (req, res) => {
@@ -57,5 +58,6 @@ router.post('/login', async (req, res) => {
         res.status(500).send('Internal server error');
     }
 });
+
 
 module.exports = router;
