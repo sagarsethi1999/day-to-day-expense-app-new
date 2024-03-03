@@ -5,6 +5,7 @@ const Expense = require('../models/expense');
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const verifyToken = require('../middleware/auth');
+const  sequelize  = require('../util/database');
 
 
 
@@ -27,29 +28,43 @@ router.post('/', verifyToken, async (req, res) => {
   const { ExpenseAmount, Description, Category } = req.body;
   const userID = req.user.id; // Extract userID from token
 
+  const transaction = await sequelize.transaction();
   try {
+    // Start a transaction
+   
+    
     // Create new expense with userID
-    const newExpense = await Expense.create({ ExpenseAmount, Description, Category, userID });
+    const newExpense = await Expense.create(
+      { ExpenseAmount, Description, Category, userID },
+      { transaction }
+    );
     console.log('Expense added:', newExpense);
 
     // Find the user by userID
-    const user = await User.findByPk(userID);
+    const user = await User.findByPk(userID, { transaction });
     if (!user) {
+      await transaction.rollback();
       return res.status(404).json({ error: 'User not found' });
     }
 
     // Increment the totalExpense of the user by the new expense amount
     user.totalExpense += parseInt(ExpenseAmount);
     // Save only the 'totalExpense' field of the user
-    await user.save({ fields: ['totalExpense'] });
+    await user.save({ fields: ['totalExpense'], transaction });
+
+    // Commit the transaction
+    await transaction.commit();
 
     // Send success response
     res.status(200).json({ message: 'Expense added successfully', newExpense });
   } catch (error) {
     console.error('Error:', error);
+    // Rollback the transaction if an error occurs
+    await transaction.rollback();
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 
 
@@ -74,40 +89,95 @@ router.get('/', verifyToken, async (req, res) => {
 
 
 
-
 router.delete('/:id', verifyToken, async (req, res) => {
-    const expenseId = req.params.id;
-    const userId = req.user.id;
+  const expenseId = req.params.id;
+  const userId = req.user.id;
+  
+  const t = await sequelize.transaction();
+  
   try {
+    // Find the expense to be deleted
+    const deletedExpense = await Expense.findByPk(expenseId, { transaction: t });
+    if (!deletedExpense) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Expense not found' });
+    }
+
+    // Calculate the amount to subtract from the user's totalExpense
+    const amountToDelete = deletedExpense.ExpenseAmount;
+
+    // Delete the expense
     await Expense.destroy({
       where: {
         id: expenseId,
         userId: userId
-      }
+      },
+      transaction: t
     });
+
+    // Update the user's totalExpense by subtracting the deleted amount
+    const user = await User.findByPk(userId, { transaction: t });
+    if (!user) {
+      await t.rollback();
+      return res.status(404).json({ error: 'User not found' });
+    }
+    user.totalExpense -= amountToDelete;
+    await user.save({ fields: ['totalExpense'], transaction: t });
+
+    await t.commit();
     res.json({ message: 'Expense deleted successfully' });
   } catch (error) {
+    console.error('Error deleting expense:', error);
+    await t.rollback();
     res.status(500).send('Internal Server Error');
   }
 });
 
-
-
-
 router.put('/:id', verifyToken, async (req, res) => {
-    const expenseId = req.params.id;
-    const userId = req.user.id;
-    try {
-      const updatedExpense = await Expense.update(req.body, {
-        where: {
-          id: expenseId,
-          userId: userId
-        }
-      });
-      res.json({ updatedExpense });
-    } catch (error) {
-      res.status(500).send('Internal Server Error');
+  const expenseId = req.params.id;
+  const userId = req.user.id;
+  
+  const t = await sequelize.transaction();
+  
+  try {
+    // Find the expense to be updated
+    const expenseToUpdate = await Expense.findByPk(expenseId, { transaction: t });
+    if (!expenseToUpdate) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Expense not found' });
     }
+
+    // Calculate the difference between the old and new expense amounts
+    const oldAmount = expenseToUpdate.ExpenseAmount;
+    const newAmount = req.body.ExpenseAmount;
+    const amountDifference = newAmount - oldAmount;
+
+    // Update the expense
+    const updatedExpense = await Expense.update(req.body, {
+      where: {
+        id: expenseId,
+        userId: userId
+      },
+      transaction: t
+    });
+
+    // Update the user's totalExpense by adding the difference
+    const user = await User.findByPk(userId, { transaction: t });
+    if (!user) {
+      await t.rollback();
+      return res.status(404).json({ error: 'User not found' });
+    }
+    user.totalExpense += amountDifference;
+    await user.save({ fields: ['totalExpense'], transaction: t });
+
+    await t.commit();
+    res.json({ updatedExpense });
+  } catch (error) {
+    console.error('Error updating expense:', error);
+    await t.rollback();
+    res.status(500).send('Internal Server Error');
+  }
 });
+
 
 module.exports = router;
