@@ -152,6 +152,12 @@
       border-radius: 5px;
       margin-top: 10px;
       text-align: center;
+
+    }
+
+    #showLeaderboardBtn {
+      display: none;
+      /* Initially hide the button */
     }
   </style>
 </head>
@@ -213,7 +219,9 @@
           document.getElementById('buyPremiumBtn').style.display = 'none';
           premiumMessage.textContent = 'You are a premium user!';
           premiumMessage.classList.add('premium-message');
+          document.getElementById('showLeaderboardBtn').style.display = 'block';
         }
+       
       } catch (error) {
         console.error(error);
       }
@@ -401,9 +409,8 @@
         const tbody = table.createTBody();
         leaderboardData.forEach(userData => {
           const row = tbody.insertRow();
-          if(userData.totalExpense === null)
-          {
-            userData.totalExpense=0;
+          if (userData.totalExpense === null) {
+            userData.totalExpense = 0;
           }
           row.innerHTML = `<td>${userData.name}</td><td>${userData.totalExpense}</td>`;
         });

@@ -24,7 +24,19 @@ router.get('/premium', verifyToken, async (req, res) => {
 });
 
 router.get('/premium/leaderboard', verifyToken, async (req, res) => {
+    
     try {
+        
+        const userId = req.user.id;
+
+        // Check if the user is a premium user
+        const user = await User.findByPk(userId);
+        if (!user || !user.premiumUser) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+
+
         const leaderboardData = await User.findAll({
             attributes: [
                 'id',
