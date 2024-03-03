@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,6 +41,7 @@
         }
 
         input[type="email"],
+        input[type="passwordemail"],
         input[type="password"] {
             width: 100%;
             padding: 10px;
@@ -71,68 +73,105 @@
         #signupButton:hover {
             background-color: #218838;
         }
-
     </style>
 </head>
+
 <body>
-<div class="container">
-    <div class="header">
-        <h2>Login</h2>
-        <p>Welcome back! Login to access your account.</p>
-    </div>
-    <form id="loginForm">
-        <div class="input-field">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required>
+    <div class="container">
+        <div class="header">
+            <h2>Login</h2>
+            <p>Welcome back! Login to access your account.</p>
         </div>
-        <div class="input-field">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
+        <form id="loginForm">
+            <div class="input-field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="input-field">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-login">Login</button>
+        </form>
+
+        <button id="forgotPasswordBtn">Forgot Password?</button>
+
+        <form id="forgotPasswordForm" style="display: none;">
+            <input type="passwordemail" id="passwordemail" placeholder="Enter your email">
+            <button type="submit">Submit</button>
+        </form>
+
+        <div class="footer">
+            <p>Don't have an account? <a href="signup.html" id="signupLink">Sign Up</a></p>
         </div>
-        <button type="submit" class="btn-login">Login</button>
-    </form>
-    <div class="footer">
-        <p>Don't have an account? <a href="signup.html" id="signupLink">Sign Up</a></p>
     </div>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.6/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.6/axios.min.js"></script>
 
-<script>
+    <script>
 
-    document.getElementById('loginForm').addEventListener('submit', (event) => {
-        event.preventDefault();
+        document.getElementById('loginForm').addEventListener('submit', (event) => {
+            event.preventDefault();
 
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-        axios.post('http://localhost:3000/user/login', { email, password })
-            .then((response) => {
-                console.log(response.data.token);
-                console.log('Response headers:', response.headers);
-                // const token = response.headers['authorization'];
-                const token = response.data.token;
-                // const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzA5Mjc0NDYzfQ.i9TakdkAn4H85_b3Sz0607qwUxOIZ1Z0lrDnr54is00";
-                console.log(token);
-                if (token) {
-                    localStorage.setItem('token', token);
-                    console.log('Login successful');
-                    window.location.href = 'expense.html';
-                } else {
-                    console.error('Authorization token not found in response');
-                }
-            })
-            .catch((error) => {
-                console.error('Login failed:', error);
-            });
-    });
+            axios.post('http://localhost:3000/user/login', { email, password })
+                .then((response) => {
+                    console.log(response.data.token);
+                    console.log('Response headers:', response.headers);
+                    // const token = response.headers['authorization'];
+                    const token = response.data.token;
+                    // const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzA5Mjc0NDYzfQ.i9TakdkAn4H85_b3Sz0607qwUxOIZ1Z0lrDnr54is00";
+                    console.log(token);
+                    if (token) {
+                        localStorage.setItem('token', token);
+                        console.log('Login successful');
+                        window.location.href = 'expense.html';
+                    } else {
+                        console.error('Authorization token not found in response');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Login failed:', error);
+                });
+        });
 
 
-    document.getElementById('signupLink').addEventListener('click', function() {
-        console.log('Redirecting to sign up page');
-        // You can add code here to redirect to the sign up page if needed
-        window.location.href = 'signup.html'; 
-    });
-</script>
+        document.getElementById('signupLink').addEventListener('click', function () {
+            console.log('Redirecting to sign up page');
+            // You can add code here to redirect to the sign up page if needed
+            window.location.href = 'signup.html';
+        });
+
+
+        const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+
+        forgotPasswordBtn.addEventListener('click', () => {
+            // Show the forgot password form
+            forgotPasswordForm.style.display = 'block';
+        });
+
+        forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+        
+    const email = document.getElementById('passwordemail').value;
+    console.log('Email:', email);
+
+            try {
+                // Make an Axios POST request to the backend API route
+                const response = await axios.post('http://localhost:3000/password/forgotpassword', { email });
+                console.log('Response:', response.data); // Add this console log to check the response
+            } catch (error) {
+                // Handle errors, maybe display an error message to the user
+                console.error('Error:', error);
+            }
+        });
+
+
+    </script>
 </body>
+
 </html>

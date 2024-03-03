@@ -43,6 +43,9 @@ app.use("/purchase/premiummembership", purchase);
 const premium = require("./routes/premium");
 app.use("/", premium);
 
+const password = require("./routes/password");
+app.use("/password", password);
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
