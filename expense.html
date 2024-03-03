@@ -143,6 +143,16 @@
     #buyPremiumBtn:hover {
       background-color: #ff3131;
     }
+
+    /* CSS for premium message */
+    .premium-message {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      text-align: center;
+    }
   </style>
 </head>
 
@@ -172,6 +182,9 @@
 
     </ul>
   </div>
+  <div id="premiumMessage"></div>
+  <button id="showLeaderboardBtn" class="btn btn-primary">Show Leaderboard</button>
+  <div id="leaderboardContainer"></div>
 
   <button id="buyPremiumBtn" class="btn btn-primary btn-lg" style="position: fixed; bottom: 20px; right: 20px;">
     Buy Premium Membership
@@ -190,7 +203,7 @@
     async function checkPremiumStatus() {
       const token = localStorage.getItem('token');
       try {
-        const response = await axios.get('http://localhost:3000/user/premium-status', {
+        const response = await axios.get('http://localhost:3000/premium', {
           headers: { 'Authorization': token }
         });
 
@@ -198,6 +211,8 @@
         console.log(response);
         if (isPremium) {
           document.getElementById('buyPremiumBtn').style.display = 'none';
+          premiumMessage.textContent = 'You are a premium user!';
+          premiumMessage.classList.add('premium-message');
         }
       } catch (error) {
         console.error(error);
@@ -360,6 +375,50 @@
         alert('something went wrong')
       });
     };
+
+
+    // Function to fetch and display the leaderboard
+    async function showLeaderboard() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:3000/premium/leaderboard', {
+          headers: { 'Authorization': token }
+        });
+        const leaderboardData = response.data;
+
+        // Clear previous leaderboard content
+        document.getElementById('leaderboardContainer').innerHTML = '';
+
+        // Create a table to display the leaderboard
+        const table = document.createElement('table');
+        table.classList.add('table');
+
+        // Create table header
+        const headerRow = table.createTHead().insertRow();
+        headerRow.innerHTML = '<th>User</th><th>Total Expense</th>';
+
+        // Create table body
+        const tbody = table.createTBody();
+        leaderboardData.forEach(userData => {
+          const row = tbody.insertRow();
+          if(userData.totalExpense === null)
+          {
+            userData.totalExpense=0;
+          }
+          row.innerHTML = `<td>${userData.name}</td><td>${userData.totalExpense}</td>`;
+        });
+
+        // Append the table to the leaderboard container
+        document.getElementById('leaderboardContainer').appendChild(table);
+      } catch (error) {
+        console.error(error);
+        // Show error message if there's an error fetching the leaderboard
+        document.getElementById('leaderboardContainer').textContent = 'Error fetching leaderboard data';
+      }
+    }
+
+    // Add click event listener to the "Show Leaderboard" button
+    document.getElementById('showLeaderboardBtn').addEventListener('click', showLeaderboard);
 
 
 

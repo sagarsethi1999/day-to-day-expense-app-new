@@ -41,7 +41,7 @@ const purchase = require("./routes/purchase");
 app.use("/purchase/premiummembership", purchase);
 
 const premium = require("./routes/premium");
-app.use("/user/premium-status", premium);
+app.use("/", premium);
 
 // Start server
 const PORT = process.env.PORT || 3000;

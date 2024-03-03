@@ -1,9 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
+const Expense = require('../models/expense');
 const verifyToken = require('../middleware/auth');
 
-router.get('/', verifyToken, async (req, res) => {
+
+const sequelize = require('../util/database');
+
+router.get('/premium', verifyToken, async (req, res) => {
     const userId = req.user.id;
     try {
         // Fetch user from database based on user ID in request
@@ -18,5 +22,30 @@ router.get('/', verifyToken, async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+router.get('/premium/leaderboard', verifyToken, async (req, res) => {
+    try {
+        const leaderboardData = await User.findAll({
+            attributes: [
+                'id',
+                'name',
+                [sequelize.fn('SUM', sequelize.col('expenses.expenseAmount')), 'totalExpense']
+            ],
+            include: [{
+                model: Expense,
+                as: 'expenses',
+                attributes: []
+            }],
+            group: ['user.id'],
+            order: [[sequelize.literal('totalExpense'), 'DESC']]
+        });
+        console.log(leaderboardData)
+        res.json(leaderboardData); // Send the leaderboard data as JSON response
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' }); // Send error response if any error occurs
+    }
+});
+
 
 module.exports = router;
