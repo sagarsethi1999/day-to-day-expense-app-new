@@ -24,34 +24,14 @@ router.get('/premium', verifyToken, async (req, res) => {
 });
 
 router.get('/premium/leaderboard', verifyToken, async (req, res) => {
-    
     try {
-        
-        const userId = req.user.id;
-
-        // Check if the user is a premium user
-        const user = await User.findByPk(userId);
-        if (!user || !user.premiumUser) {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-
-
-
         const leaderboardData = await User.findAll({
             attributes: [
-                'id',
                 'name',
-                [sequelize.fn('SUM', sequelize.col('expenses.expenseAmount')), 'totalExpense']
+                'totalExpense' // Include the totalExpense column
             ],
-            include: [{
-                model: Expense,
-                as: 'expenses',
-                attributes: []
-            }],
-            group: ['user.id'],
-            order: [['totalExpense', 'DESC']]
+            order: [['totalExpense', 'DESC']] // Order by totalExpense in descending order
         });
-        console.log(leaderboardData)
         res.json(leaderboardData); // Send the leaderboard data as JSON response
     } catch (error) {
         console.error(error);

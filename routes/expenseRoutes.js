@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Expense = require('../models/expense');
+const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const verifyToken = require('../middleware/auth');
 
@@ -27,15 +28,26 @@ router.post('/', verifyToken, async (req, res) => {
   const userID = req.user.id; // Extract userID from token
 
   try {
-      // Create new expense with userID
-      const newExpense = await Expense.create({ ExpenseAmount, Description, Category, userID });
-      console.log('Expense added:', newExpense);
+    // Create new expense with userID
+    const newExpense = await Expense.create({ ExpenseAmount, Description, Category, userID });
+    console.log('Expense added:', newExpense);
 
-      // Send success response
-      res.status(200).json({ message: 'Expense added successfully', newExpense });
+    // Find the user by userID
+    const user = await User.findByPk(userID);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Increment the totalExpense of the user by the new expense amount
+    user.totalExpense += parseInt(ExpenseAmount);
+    // Save only the 'totalExpense' field of the user
+    await user.save({ fields: ['totalExpense'] });
+
+    // Send success response
+    res.status(200).json({ message: 'Expense added successfully', newExpense });
   } catch (error) {
-      console.error('Error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
