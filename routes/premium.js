@@ -49,7 +49,7 @@ router.get('/premium/leaderboard', verifyToken, async (req, res) => {
                 attributes: []
             }],
             group: ['user.id'],
-            order: [[sequelize.literal('totalExpense'), 'DESC']]
+            order: [['totalExpense', 'DESC']]
         });
         console.log(leaderboardData)
         res.json(leaderboardData); // Send the leaderboard data as JSON response
