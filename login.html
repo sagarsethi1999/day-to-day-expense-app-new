@@ -153,12 +153,15 @@
             forgotPasswordForm.style.display = 'block';
         });
 
+
+
+        
         forgotPasswordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-        
-    const email = document.getElementById('passwordemail').value;
-    console.log('Email:', email);
+
+            const email = document.getElementById('passwordemail').value;
+            console.log('Email:', email);
 
             try {
                 // Make an Axios POST request to the backend API route

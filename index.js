@@ -5,6 +5,7 @@ const cors = require("cors");
 const User = require("./models/user");
 const Expense = require('./models/expense');
 const Order = require('./models/orders');
+const ForgotPasswordRequest = require('./models/ForgotPasswordRequests');
 
 const app = express();
 
@@ -29,6 +30,9 @@ Expense.belongsTo(User, { foreignKey: 'userID' });
 
 User.hasMany(Order);
 Order.belongsTo(User);
+
+User.hasMany(ForgotPasswordRequest);
+ForgotPasswordRequest.belongsTo(User, { onDelete: 'CASCADE' });
 
 // Routes
 const userRoutes = require("./routes/userRoutes");
