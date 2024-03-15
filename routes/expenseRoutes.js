@@ -5,8 +5,88 @@ const Expense = require('../models/expense');
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const verifyToken = require('../middleware/auth');
-const  sequelize  = require('../util/database');
+const sequelize = require('../util/database');
+const AWS = require('aws-sdk');
+const DownloadedFile = require('../models/downloadedFile');
+require('dotenv').config();
 
+
+function uploadToS3(data, filename) {
+
+  const BUCKET_NAME = 'expensetrackingappbysagar';
+  const IAM_USER_KEY = process.env.IAM_USER_KEY;
+  const IAM_USER_SECRET = process.env.IAM_USER_SECRET;
+
+  let s3bucket = new AWS.S3({
+    accessKeyId: IAM_USER_KEY,
+    secretAccessKey: IAM_USER_SECRET
+  });
+
+
+  var params = {
+    Bucket: BUCKET_NAME,
+    Key: filename,
+    Body: data,
+    ACL: 'public-read'
+  }
+
+  return new Promise ( (resolve, reject ) => {
+
+    s3bucket.upload(params, (err, s3response) => {
+      if (err) {
+        console.log('something went wrong!!!', err);
+        reject(err);
+      }
+      else {
+        console.log('success', s3response);
+        resolve(s3response.Location);
+      }
+  
+  
+    })
+  })
+}
+
+router.get('/download', verifyToken, async (req, res) => {
+  console.log("Hello")
+  const userId = req.user.id;
+  console.log(userId);
+  try {
+    // Assuming you have a Sequelize model for expenses
+    const expenses = await Expense.findAll({
+      where: {
+        userId: userId // Filter expenses by user ID
+      }
+    });
+    const stringifiedExpenses = JSON.stringify(expenses);
+    const filename = `Expense${userId}/${new Date()}.txt`;
+    const fileURL = await uploadToS3(stringifiedExpenses, filename);
+    await DownloadedFile.create({
+      userId: userId,
+      fileURL: fileURL
+    });
+    res.status(200).json({ fileURL, success: true });
+    // res.json(expenses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.get('/downloaded-files', verifyToken, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    // Fetch downloaded files for the user
+    const downloadedFiles = await DownloadedFile.findAll({
+      where: { userId: userId },
+      attributes: ['fileURL', 'createdAt'] // Include only fileURL and createdAt fields
+    });
+    res.json(downloadedFiles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
 // Middleware to verify JWT token
@@ -31,8 +111,8 @@ router.post('/', verifyToken, async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
     // Start a transaction
-   
-    
+
+
     // Create new expense with userID
     const newExpense = await Expense.create(
       { ExpenseAmount, Description, Category, userID },
@@ -74,16 +154,16 @@ router.post('/', verifyToken, async (req, res) => {
 router.get('/', verifyToken, async (req, res) => {
   const userId = req.user.id; // Extract the user ID from the verified token payload
   try {
-      // Assuming you have a Sequelize model for expenses
-      const expenses = await Expense.findAll({
-          where: {
-              userId: userId // Filter expenses by user ID
-          }
-      });
-      res.json(expenses);
+    // Assuming you have a Sequelize model for expenses
+    const expenses = await Expense.findAll({
+      where: {
+        userId: userId // Filter expenses by user ID
+      }
+    });
+    res.json(expenses);
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal server error' });
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -92,9 +172,9 @@ router.get('/', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
   const expenseId = req.params.id;
   const userId = req.user.id;
-  
+
   const t = await sequelize.transaction();
-  
+
   try {
     // Find the expense to be deleted
     const deletedExpense = await Expense.findByPk(expenseId, { transaction: t });
@@ -136,9 +216,9 @@ router.delete('/:id', verifyToken, async (req, res) => {
 router.put('/:id', verifyToken, async (req, res) => {
   const expenseId = req.params.id;
   const userId = req.user.id;
-  
+
   const t = await sequelize.transaction();
-  
+
   try {
     // Find the expense to be updated
     const expenseToUpdate = await Expense.findByPk(expenseId, { transaction: t });
