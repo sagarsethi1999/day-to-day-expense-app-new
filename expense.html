@@ -20,13 +20,15 @@
         }
 
         .container {
-            position: relative;
             max-width: 800px;
-            margin: 0 auto;
+            margin: 20px auto;
+            /* Added margin to center the container */
             padding: 20px;
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: #fff;
+            /* Changed background color to white */
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            /* Other existing styles */
         }
 
         .expense-form {
@@ -250,6 +252,27 @@
             background-color: #0056b3;
             /* Darker blue color on hover */
         }
+
+        /* Style for pagination buttons */
+        .pagination-btn {
+            background-color: #007bff;
+            color: #fff;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+            margin: 0 5px;
+        }
+
+        .pagination-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .pagination-btn:disabled {
+            background-color: #ced4da;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -275,15 +298,23 @@
             <input type="submit" class="button" value="Add Expense">
         </form>
 
+
+
         <ul id="items" class="expense-list">
 
         </ul>
+        <div id="pagination"></div>
+
     </div>
+
     <div id="premiumMessage"></div>
+
     <button id="showLeaderboardBtn" class="btn btn-primary">Show Leaderboard</button>
+
     <div id="leaderboardContainer"></div>
 
     <button id="downloadExpensesBtn" class="btn btn-primary">Download Expenses</button>
+
     <table id="downloadedFilesTable" class="download-list">
         <thead>
             <tr>
@@ -311,6 +342,8 @@
         window.onload = checkPremiumStatus;
 
 
+
+
         async function checkPremiumStatus() {
             const token = localStorage.getItem('token');
             try {
@@ -326,7 +359,7 @@
                     premiumMessage.classList.add('premium-message');
                     document.getElementById('showLeaderboardBtn').style.display = 'block';
                     document.getElementById('downloadExpensesBtn').style.display = 'block';
-                   
+
                 }
 
             } catch (error) {
@@ -340,27 +373,6 @@
 
         var editingItem = null;
         document.addEventListener('submit', addExpense);
-
-        async function fetchExpenses() {
-            document.getElementById('items').innerHTML = '';
-            const token = localStorage.getItem('token');
-            try {
-                const response = await axios.get("http://localhost:3000/user/expense", {
-                    headers: {
-                        'Authorization': token // Include the JWT token in the 'Authorization' header
-                    }
-                });
-                for (let i = 0; i < response.data.length; i++) {
-                    showExpenseOnScreen(response.data[i]);
-                }
-                console.log(response);
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-
-        fetchExpenses();
 
         function addExpense(event) {
             event.preventDefault();
@@ -606,6 +618,79 @@
             }
         }
 
+
+
+        // async function fetchExpenses() {
+        //     document.getElementById('items').innerHTML = '';
+        //     const token = localStorage.getItem('token');
+        //     try {
+        //         const response = await axios.get("http://localhost:3000/user/expense", {
+        //             headers: {
+        //                 'Authorization': token // Include the JWT token in the 'Authorization' header
+        //             }
+        //         });
+        //         for (let i = 0; i < response.data.length; i++) {
+        //             showExpenseOnScreen(response.data[i]);
+        //         }
+        //         console.log(response);
+        //     } catch (error) {
+        //         console.log(error);
+        //     }
+        // }
+        // fetchExpenses();
+
+        async function fetchExpenses(page = 1) {
+            document.getElementById('items').innerHTML = '';
+            const token = localStorage.getItem('token');
+            try {
+                const response = await axios.get(`http://localhost:3000/user/expense?page=${page}`, {
+                    headers: {
+                        'Authorization': token
+                    }
+                });
+
+                const expenses = response.data.expenses;
+                
+                expenses.forEach(expense => {
+                    showExpenseOnScreen(expense);
+                });
+
+                const totalPages = response.data.totalPages;
+                const hasNextPage = response.data.hasNextPage;
+                const hasPreviousPage = response.data.hasPreviousPage;
+
+               
+                renderPaginationButtons(page, totalPages, hasNextPage, hasPreviousPage);
+
+                console.log(response);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        function renderPaginationButtons(currentPage, totalPages, hasNextPage, hasPreviousPage) {
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+
+            if (hasPreviousPage) {
+                const prevButton = document.createElement('button');
+                prevButton.innerText = 'Previous';
+                prevButton.addEventListener('click', () => fetchExpenses(currentPage - 1));
+                prevButton.classList.add('pagination-btn');
+                paginationContainer.appendChild(prevButton);
+            }
+
+            if (hasNextPage) {
+                const nextButton = document.createElement('button');
+                nextButton.innerText = 'Next';
+                nextButton.addEventListener('click', () => fetchExpenses(currentPage + 1));
+                nextButton.classList.add('pagination-btn');
+                paginationContainer.appendChild(nextButton);
+            }
+        }
+
+      
+        fetchExpenses();
 
 
 

@@ -11,6 +11,8 @@ const DownloadedFile = require('../models/downloadedFile');
 require('dotenv').config();
 
 
+
+
 function uploadToS3(data, filename) {
 
   const BUCKET_NAME = 'expensetrackingappbysagar';
@@ -30,7 +32,7 @@ function uploadToS3(data, filename) {
     ACL: 'public-read'
   }
 
-  return new Promise ( (resolve, reject ) => {
+  return new Promise((resolve, reject) => {
 
     s3bucket.upload(params, (err, s3response) => {
       if (err) {
@@ -41,8 +43,8 @@ function uploadToS3(data, filename) {
         console.log('success', s3response);
         resolve(s3response.Location);
       }
-  
-  
+
+
     })
   })
 }
@@ -150,17 +152,37 @@ router.post('/', verifyToken, async (req, res) => {
 
 
 
-// Route to handle retrieving all expenses
+// // Route to handle retrieving all expenses
+// router.get('/', verifyToken, async (req, res) => {
+//   const userId = req.user.id; // Extract the user ID from the verified token payload
+//   try {
+//     // Assuming you have a Sequelize model for expenses
+//     const expenses = await Expense.findAll({
+//       where: {
+//         userId: userId // Filter expenses by user ID
+//       }
+//     });
+//     res.json(expenses);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// });
+
 router.get('/', verifyToken, async (req, res) => {
-  const userId = req.user.id; // Extract the user ID from the verified token payload
+  const userId = req.user.id;
+  const page = req.query.page || 1;
+  const limit = 10;
+  const offset = (page - 1) * limit;
+
   try {
-    // Assuming you have a Sequelize model for expenses
-    const expenses = await Expense.findAll({
-      where: {
-        userId: userId // Filter expenses by user ID
-      }
-    });
-    res.json(expenses);
+    const totalCount = await Expense.count({ where: { userId } });
+    const expenses = await Expense.findAll({ where: { userId }, limit, offset });
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    res.json({ expenses, totalPages, hasNextPage, hasPreviousPage });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
