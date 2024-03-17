@@ -1,0 +1,4 @@
+::1 - - [17/Mar/2024:20:31:01 +0000] "OPTIONS /user/expense HTTP/1.1" 204 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+::1 - - [17/Mar/2024:20:31:01 +0000] "POST /user/expense HTTP/1.1" 200 223 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+::1 - - [17/Mar/2024:20:31:01 +0000] "OPTIONS /user/expense?page=1&limit=10 HTTP/1.1" 204 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+::1 - - [17/Mar/2024:20:31:01 +0000] "GET /user/expense?page=1&limit=10 HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"

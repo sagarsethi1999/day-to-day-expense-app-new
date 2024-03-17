@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const uuid = require('uuid');
-const sgMail = require('@sendgrid/mail');
+const SibApiV3Sdk = require('sib-api-v3-sdk'); 
 const bcrypt = require('bcrypt');
+require('dotenv').config();
 
 const User = require('../models/user');
 const Forgotpassword = require('../models/ForgotPasswordRequests');
@@ -16,17 +17,22 @@ router.post('/forgotpassword', async (req, res) => {
             const id = uuid.v4();
             await user.createForgotpassword({ id, active: true });
 
-            sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+            // Configure Sendinblue SDK
+            const defaultClient = SibApiV3Sdk.ApiClient.instance;
+            const apiKey = defaultClient.authentications['api-key'];
+            apiKey.apiKey = process.env.SENDINBLUE_API_KEY;
 
-            const msg = {
-                to: email,
-                from: 'yj.rocks.2411@gmail.com',
-                subject: 'Password Reset Request',
-                text: 'Click the link to reset your password',
-                html: `<a href="http://localhost:3000/password/resetpassword/${id}">Reset Password</a>`,
-            };
+            const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-            await sgMail.send(msg);
+            // Create a new transactional email request
+            const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+            sendSmtpEmail.sender = { email: 'yj.rocks.2411@gmail.com' };
+            sendSmtpEmail.to = [{ email }];
+            sendSmtpEmail.subject = 'Password Reset Request';
+            sendSmtpEmail.htmlContent = `<a href="http://localhost:3000/password/resetpassword/${id}">Reset Password</a>`;
+
+            // Send the email
+            const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
 
             return res.status(200).json({ message: 'Link to reset password sent to your email', success: true });
         } else {
@@ -37,6 +43,7 @@ router.post('/forgotpassword', async (req, res) => {
         return res.status(500).json({ message: error.message, success: false });
     }
 });
+
 
 router.get('/resetpassword/:id', async (req, res) => {
     try {

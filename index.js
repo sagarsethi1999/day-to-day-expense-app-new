@@ -6,13 +6,25 @@ const User = require("./models/user");
 const Expense = require('./models/expense');
 const Order = require('./models/orders');
 const ForgotPasswordRequest = require('./models/ForgotPasswordRequests');
+const fs = require('fs');
+const morgan = require('morgan');
+const path = require('path');
+const compression = require('compression');
+
 
 const app = express();
+const helmet = require('helmet');
+
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
 
 // Middleware
+app.use(morgan('combined', { stream: accessLogStream }));
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(helmet());
+app.use(compression());
+
 
 // Sync database
 const sequelize = require("./util/database");

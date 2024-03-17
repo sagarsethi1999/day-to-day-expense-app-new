@@ -5,13 +5,14 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const verifyToken = require('../middleware/auth');
+require('dotenv').config();
 
 
 router.get('/', verifyToken, async (req, res) => {
     try {
         const rzp = new Razorpay({
-            key_id: "rzp_test_laucp39lO1Dvor",
-            key_secret: "d52GQhSlvrJTa4g4AyowISvR"
+            key_id: process.env.RAZORPAY_API_ID,
+            key_secret: process.env.RAZORPAY_API_KEY
         });
 
         const amount = 9900; // Amount in smallest currency unit (e.g., paise for INR)
