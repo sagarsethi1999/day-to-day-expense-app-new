@@ -169,25 +169,39 @@ router.post('/', verifyToken, async (req, res) => {
 //   }
 // });
 
+
 router.get('/', verifyToken, async (req, res) => {
   const userId = req.user.id;
-  const page = req.query.page || 1;
-  const limit = 10;
-  const offset = (page - 1) * limit;
+  const page = parseInt(req.query.page) || 1; 
+  const limit = parseInt(req.query.limit) || 10; 
 
   try {
-    const totalCount = await Expense.count({ where: { userId } });
-    const expenses = await Expense.findAll({ where: { userId }, limit, offset });
-    const totalPages = Math.ceil(totalCount / limit);
+    const offset = (page - 1) * limit;
+    const expenses = await Expense.findAndCountAll({
+      where: {
+        userId: userId
+      },
+      limit: limit,
+      offset: offset
+    });
+
+    const totalPages = Math.ceil(expenses.count / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
-    res.json({ expenses, totalPages, hasNextPage, hasPreviousPage });
+    res.json({
+      expenses: expenses.rows,
+      currentPage: page,
+      totalPages: totalPages,
+      hasNextPage: hasNextPage,
+      hasPreviousPage: hasPreviousPage
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 
 

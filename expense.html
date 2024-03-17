@@ -298,7 +298,13 @@
             <input type="submit" class="button" value="Add Expense">
         </form>
 
-
+        <label for="expensesPerPage">Rows Per page:</label>
+        <select id="expensesPerPage" onchange="handleExpensesPerPageChange()">
+            <option value="">Enter no. of Rows</option>
+            <option value="10">10 expenses per page</option>
+            <option value="15">15 expenses per page</option>
+            <option value="20">20 expenses per page</option>
+        </select>
 
         <ul id="items" class="expense-list">
 
@@ -639,18 +645,35 @@
         // }
         // fetchExpenses();
 
-        async function fetchExpenses(page = 1) {
+        function handleExpensesPerPageChange() {
+
+            const selectedExpensesPerPage = document.getElementById('expensesPerPage').value;
+
+            localStorage.setItem('expensesPerPage', selectedExpensesPerPage);
+
+            fetchExpenses();
+        }
+
+
+
+
+
+        async function fetchExpenses(page = 1, limit = localStorage.getItem('expensesPerPage')) {
             document.getElementById('items').innerHTML = '';
             const token = localStorage.getItem('token');
             try {
-                const response = await axios.get(`http://localhost:3000/user/expense?page=${page}`, {
+                const response = await axios.get(`http://localhost:3000/user/expense`, {
                     headers: {
                         'Authorization': token
+                    },
+                    params: {
+                        page: page,
+                        limit: limit
                     }
                 });
 
                 const expenses = response.data.expenses;
-                
+
                 expenses.forEach(expense => {
                     showExpenseOnScreen(expense);
                 });
@@ -659,7 +682,7 @@
                 const hasNextPage = response.data.hasNextPage;
                 const hasPreviousPage = response.data.hasPreviousPage;
 
-               
+
                 renderPaginationButtons(page, totalPages, hasNextPage, hasPreviousPage);
 
                 console.log(response);
@@ -689,7 +712,7 @@
             }
         }
 
-      
+
         fetchExpenses();
 
 
