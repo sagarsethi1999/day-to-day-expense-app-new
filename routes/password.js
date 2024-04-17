@@ -29,7 +29,7 @@ router.post('/forgotpassword', async (req, res) => {
             sendSmtpEmail.sender = { email: 'yj.rocks.2411@gmail.com' };
             sendSmtpEmail.to = [{ email }];
             sendSmtpEmail.subject = 'Password Reset Request';
-            sendSmtpEmail.htmlContent = `<a href="http://localhost:3000/password/resetpassword/${id}">Reset Password</a>`;
+            sendSmtpEmail.htmlContent = `<a href="http://13.239.6.219:3000/password/resetpassword/${id}">Reset Password</a>`;
 
             // Send the email
             const response = await apiInstance.sendTransacEmail(sendSmtpEmail);

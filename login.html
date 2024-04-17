@@ -116,7 +116,7 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            axios.post('http://localhost:3000/user/login', { email, password })
+            axios.post('http://13.239.6.219:3000/user/login', { email, password })
                 .then((response) => {
                     console.log(response.data.token);
                     console.log('Response headers:', response.headers);
@@ -165,7 +165,7 @@
 
             try {
                 // Make an Axios POST request to the backend API route
-                const response = await axios.post('http://localhost:3000/password/forgotpassword', { email });
+                const response = await axios.post('http://13.239.6.219:3000/password/forgotpassword', { email });
                 console.log('Response:', response.data); // Add this console log to check the response
             } catch (error) {
                 // Handle errors, maybe display an error message to the user
